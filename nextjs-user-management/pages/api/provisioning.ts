@@ -1,4 +1,3 @@
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
 import {
   UserIdentityCreatedWebhookPayload,
@@ -8,10 +7,24 @@ import { confirmProvisioning } from "../../helpers/api/provisioning";
 import { redis } from "../../helpers/api/redis";
 
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
-
 const ANZU_ACCESS_TOKEN = process.env.ANZU_ACCESS_TOKEN;
 
-export default async function handler(
+export function withErrorHandler(
+  handler: (req: NextApiRequest, res: NextApiResponse) => Promise<void>
+): (req: NextApiRequest, res: NextApiResponse) => Promise<void> {
+  return async (req, res) => {
+    try {
+      await handler(req, res);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        error: err instanceof Error ? err.message : "something went wrong",
+      });
+    }
+  };
+}
+
+export default withErrorHandler(async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -54,14 +67,13 @@ export default async function handler(
       );
 
       res.status(200).json({ success: true });
-
       return;
     }
     default:
       res.status(400).json({ error: "Unhandled kind", kind: body.kind });
       return;
   }
-}
+});
 
 export const config = {
   api: {
