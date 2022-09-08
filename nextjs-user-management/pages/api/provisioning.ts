@@ -32,7 +32,6 @@ export default async function handler(
   try {
     body = await verifyWebhookRequest(req, WEBHOOK_SECRET);
   } catch (err) {
-    console.log({ err });
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
@@ -40,7 +39,7 @@ export default async function handler(
   switch (body.kind) {
     case "ping":
       res.status(200).json({ message: "pong" });
-      break;
+      return;
     case "blocks.user_management.user_identity_created": {
       const { payload, scope } = body as UserIdentityCreatedWebhookPayload;
 
@@ -53,10 +52,15 @@ export default async function handler(
         scope.environmentId,
         payload.identity.id
       );
-    }
-  }
 
-  res.status(200).json({ success: true });
+      res.status(200).json({ success: true });
+
+      return;
+    }
+    default:
+      res.status(400).json({ error: "Unhandled kind", kind: body.kind });
+      return;
+  }
 }
 
 export const config = {
