@@ -1,6 +1,5 @@
 /**
  * Updates provisioning status of given user identity to complete
- * @param endpoint
  * @param token
  * @param teamId
  * @param projectId
@@ -8,7 +7,6 @@
  * @param userIdentityId
  */
 export async function confirmProvisioning(
-  endpoint: string,
   token: string,
   teamId: string,
   projectId: string,
@@ -16,7 +14,7 @@ export async function confirmProvisioning(
   userIdentityId: string
 ) {
   const resp = await fetch(
-    `${endpoint}/teams/${teamId}/projects/${projectId}/environments/${environmentId}/blocks/user_management/user_identities/${userIdentityId}`,
+    `https://api.anzuhq.com/2022.8/teams/${teamId}/projects/${projectId}/environments/${environmentId}/blocks/user_management/user_identities/${userIdentityId}`,
     {
       method: "PATCH",
       headers: {

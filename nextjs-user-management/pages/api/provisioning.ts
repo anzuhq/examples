@@ -9,7 +9,6 @@ import { redis } from "../../helpers/api/redis";
 
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 
-const ANZU_API_ENDPOINT = process.env.ANZU_API_ENDPOINT;
 const ANZU_ACCESS_TOKEN = process.env.ANZU_ACCESS_TOKEN;
 
 export default async function handler(
@@ -23,10 +22,6 @@ export default async function handler(
 
   if (!WEBHOOK_SECRET) {
     throw new Error("Missing webhook secret");
-  }
-
-  if (!ANZU_API_ENDPOINT) {
-    throw new Error("Missing Anzu API endpoint");
   }
 
   if (!ANZU_ACCESS_TOKEN) {
@@ -52,7 +47,6 @@ export default async function handler(
       await redis().set(payload.identity.id, payload.identity.email);
 
       await confirmProvisioning(
-        ANZU_API_ENDPOINT,
         ANZU_ACCESS_TOKEN,
         scope.teamId,
         scope.projectId,
