@@ -1,9 +1,9 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-import { Attribution } from "./helper/attribution";
-import { BrowserOnly } from "./helper/browser";
-import { useLoadIdentity } from "./helper/identity";
-import { useStoreToken } from "./helper/token";
+import { Attribution } from "../helpers/attribution";
+import { BrowserOnly } from "../helpers/browser";
+import { useLoadIdentity } from "../helpers/identity";
+import { useStoreToken } from "../helpers/token";
 
 const Home: NextPage = () => {
   return (

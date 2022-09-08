@@ -3,9 +3,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import {
   UserIdentityCreatedWebhookPayload,
   verifyWebhookRequest,
-} from "../helper/api/webhook";
-import { confirmProvisioning } from "../helper/api/provisioning";
-import { redis } from "../helper/api/redis";
+} from "../../helpers/api/webhook";
+import { confirmProvisioning } from "../../helpers/api/provisioning";
+import { redis } from "../../helpers/api/redis";
 
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 
@@ -49,7 +49,7 @@ export default async function handler(
     case "blocks.user_management.user_identity_created": {
       const { payload, scope } = body as UserIdentityCreatedWebhookPayload;
 
-      await redis.set(payload.identity.id, payload.identity.email);
+      await redis().set(payload.identity.id, payload.identity.email);
 
       await confirmProvisioning(
         ANZU_API_ENDPOINT,

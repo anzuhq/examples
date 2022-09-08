@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { redis } from "../helper/api/redis";
-import { validateToken } from "../helper/api/token";
+import { redis } from "../../helpers/api/redis";
+import { validateToken } from "../../helpers/api/token";
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,6 +15,6 @@ export default async function handler(
 
   const { sub } = await validateToken<{ sub: string }>(token);
 
-  const email = await redis.get(sub);
+  const email = await redis().get(sub);
   res.json({ email });
 }
