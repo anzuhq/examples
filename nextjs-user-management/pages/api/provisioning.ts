@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import {
-  UserIdentityCreatedWebhookPayload,
+  IUserManagementEventUserIdentityCreated,
   verifyWebhookRequest,
 } from "../../helpers/api/webhook";
 import { confirmProvisioning } from "../../helpers/api/provisioning";
@@ -53,15 +53,15 @@ export default withErrorHandler(async function handler(
     case "ping":
       res.status(200).json({ message: "pong" });
       return;
-    case "blocks.user_management.user_identity_created": {
-      const { payload, scope } = body as UserIdentityCreatedWebhookPayload;
+    case "user_management.user_identity_created": {
+      const { payload, scope } =
+        body as IUserManagementEventUserIdentityCreated;
 
       await redis().set(payload.identity.id, payload.identity.email);
 
       await confirmProvisioning(
         ANZU_ACCESS_TOKEN,
-        scope.teamId,
-        scope.projectId,
+        scope.workspaceId,
         scope.environmentId,
         payload.identity.id
       );

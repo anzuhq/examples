@@ -1,33 +1,34 @@
-import { createHmac } from "crypto";
 import { NextApiRequest } from "next";
 import { Readable } from "stream";
+import { webhooks } from "@anzuhq/sdk-node";
 
-export interface UserIdentityCreatedWebhookPayload {
-  webhookId: string;
-  version: "2022.8";
-  createdAt: string;
-  id: string;
+export interface IUserManagementEventUserIdentityCreated
+  extends webhooks.IWebhookDeliveryContent {
+  kind: "user_identity_created";
   payload: {
     provisionedWith: string;
+    isSecondaryIdentity?: boolean;
+    identity: {
+      id: string;
+      email?: string;
+      provider: string;
+      name?: string;
+      givenName?: string;
+      familyName?: string;
+      userName?: string;
+      avatarUrl?: string;
+      phoneNumber?: string;
+      primaryIdentity?: string;
+    };
     authAttempt: {
       id: string;
       createdAt: string;
-      acceptedAt: string;
-      ipAddress: string | null;
-      redirectUri: string | null;
-      userAgent: string | null;
-    };
-    identity: {
-      id: string;
-      email: string;
-      provider: string;
-    };
-  };
-  kind: "blocks.user_management.user_identity_created";
-  scope: {
-    projectId: string;
-    teamId: string;
-    environmentId: string;
+      referrer?: string;
+      ipAddress?: string;
+      userAgent?: string;
+      redirectUri?: string;
+      acceptedAt?: string;
+    } | null;
   };
 }
 
@@ -40,7 +41,7 @@ export interface UserIdentityCreatedWebhookPayload {
 export async function verifyWebhookRequest(
   req: NextApiRequest,
   webhookSecret: string
-) {
+): Promise<webhooks.IWebhookDeliveryContent> {
   const signature = req.headers["anzu-signature"];
   if (!signature) {
     throw new Error("Missing signature");
@@ -51,16 +52,8 @@ export async function verifyWebhookRequest(
   }
 
   const buf = await buffer(req);
-  const rawBody = buf.toString("utf8");
 
-  validateSignature(signature, rawBody, webhookSecret);
-
-  try {
-    const parsed = JSON.parse(rawBody);
-    return parsed;
-  } catch (err) {
-    throw new Error("Invalid JSON body");
-  }
+  return webhooks.constructEvent(buf, signature, webhookSecret);
 }
 
 /**
@@ -74,44 +67,4 @@ async function buffer(readable: Readable) {
     chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
   }
   return Buffer.concat(chunks);
-}
-
-/**
- * Validates signature with request body and secret
- *
- * Uses timestamp and sig from signature value
- *
- * @param signature full signature header including ts, alg, and sig
- * @param requestBody
- * @param secret
- */
-function validateSignature(
-  signature: string,
-  requestBody: string,
-  secret: string
-) {
-  const params = new URLSearchParams(signature);
-
-  const ts = params.get("ts");
-  const alg = params.get("alg");
-  const sig = params.get("sig");
-
-  if (!ts || !alg || !sig) {
-    throw new Error("Invalid signature");
-  }
-
-  const expectedSig = getHmac(secret, ts, requestBody);
-
-  if (sig !== expectedSig) {
-    throw new Error("Invalid signature");
-  }
-}
-
-function getHmac(secret: string, ts: string, requestBody: string) {
-  const hmac = createHmac("sha256", secret);
-
-  const signedPayload = `${ts}.${requestBody}`;
-  hmac.update(signedPayload);
-
-  return hmac.digest("hex");
 }
